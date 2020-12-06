@@ -1,6 +1,7 @@
 module Counter exposing (Model)
 
 import Utils exposing (Rectangle, Circle, Point)
+import Debug exposing (log)
 
 import Html.Attributes exposing (..)
 import Browser
@@ -18,6 +19,7 @@ import Utils exposing (
   rectangleToHtml)
 import Utils exposing (createCircle, circleToHtml)
 import List
+import Utils exposing (pointInsideRectangle)
 
 
 -- MAIN
@@ -42,13 +44,14 @@ type alias Model =
   , x: Float
   , y: Float
   , pointsInCircle: Int
+  , pointsInSquare: Int
   , monteCarloPi: Float
   }
 
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  ( Model Time.utc (Time.millisToPosix 0) [] (createCircle 150 150 defaultRadius) (createRectangle 50 100 defaultRadius defaultRadius) 0 0 0 0 
+  ( Model Time.utc (Time.millisToPosix 0) [] (createCircle 150 50 defaultRadius) (createRectangle 50 50 defaultRadius defaultRadius) 0 0 0 0 0 
   , Task.perform AdjustTimeZone Time.here
   )
 
@@ -66,11 +69,11 @@ update msg model =
   case msg of
     Tick newTime -> 
       (model
-      , Random.generate NewRandomX (Random.float 0 300))
+      , Random.generate NewRandomX (Random.float 0 200))
 
     NewRandomX newX ->
       ({ model | x = newX }
-      , Random.generate NewRandomY (Random.float 0 300))
+      , Random.generate NewRandomY (Random.float 0 100))
 
     NewRandomY newY ->
       let
@@ -78,13 +81,18 @@ update msg model =
         points = List.append model.points [newPoint]
         total = List.length points
         pointInCircle = if (pointInsideCircle  model.circle newPoint) then 1 else 0 
+        pointInSquare = if (pointInsideRectangle newPoint model.rectangle) then 1 else 0
+
         pointsInCircle = pointInCircle + model.pointsInCircle
-        monteCarloPi = calculatePi pointInCircle total
+        pointsInSquare = pointInSquare + model.pointsInSquare
+        monteCarloPi = calculatePi pointsInCircle pointsInSquare
       in
         ({ model | points = points
         , y = newY
         , monteCarloPi = monteCarloPi
-        , pointsInCircle = model.pointsInCircle + pointInCircle}
+        , pointsInCircle = model.pointsInCircle + pointInCircle
+        , pointsInSquare = model.pointsInSquare + pointsInSquare
+        }
         , Cmd.none )
 
     AdjustTimeZone newZone ->
@@ -96,7 +104,7 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Time.every 10 Tick
+  Time.every 1000 Tick
 
 
 -- VIEW
@@ -111,14 +119,20 @@ view model =
     htmlCircle = [circleToHtml(model.circle)]
     htmlRectangle = [rectangleToHtml(model.rectangle)]
     shapes = htmlCircle ++ htmlRectangle ++ (pointsToHtml model.points)
-    pi = p [] [text (String.fromFloat model.monteCarloPi)]
+    pi = p [] [text ("PI: " ++ (String.fromFloat model.monteCarloPi))]
+    pointsInCircle = p [] [text ("Inside circle: " ++ (String.fromInt model.pointsInCircle))]
+    pointsInSqare = p [] [text ("Inside square: " ++ (String.fromInt model.pointsInSquare))]
+    totalPoints = p [] [text ("Total: " ++ (String.fromInt (List.length model.points)))]
   in
   div [] [
     div [
-      style "width" "300px"
-    ,style "height" "300px" 
+      style "width" "200px"
+    ,style "height" "100px" 
     ,style "position" "relative"
     ,style "background-color" "gray"
     ] (shapes),
-    pi
+    pi,
+    pointsInCircle,
+    pointsInSqare,
+    totalPoints
   ]

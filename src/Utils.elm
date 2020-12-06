@@ -10,7 +10,8 @@ module Utils exposing (
   createCircle,
   calculatePi,
   circleToHtml,
-  pointInsideCircle
+  pointInsideCircle,
+  pointInsideRectangle
   )
 
 import Html exposing (..)
@@ -53,10 +54,10 @@ createRectangle x y width height =
     y = y,
     width = width,
     height = height,
-    p1 = { x = x - (width / 2), y = y - (height / 2)},
-    p2 = { x = x + (width / 2), y = y - (height / 2)},
-    p3 = { x = x + (width / 2), y = y + (height / 2)},
-    p4 = { x = x - (width / 2), y = y + (height / 2)}
+    p1 = { x = x + (width / 2), y = y - (height / 2)},
+    p2 = { x = x + (width / 2), y = y + (height / 2)},
+    p3 = { x = x - (width / 2), y = y + (height / 2)},
+    p4 = { x = x - (width / 2), y = y - (height / 2)}
   }
 
 
@@ -137,4 +138,4 @@ triangleArea point1 point2 point3 =
     )
 
 calculatePi : Int -> Int -> Float
-calculatePi inCircle total = 4 * ((Basics.toFloat inCircle) / (Basics.toFloat total))
+calculatePi inCircle inSquare = (Basics.toFloat inCircle) / (Basics.toFloat inSquare)
