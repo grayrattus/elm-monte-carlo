@@ -90,8 +90,8 @@ update msg model =
         ({ model | points = points
         , y = newY
         , monteCarloPi = monteCarloPi
-        , pointsInCircle = model.pointsInCircle + pointInCircle
-        , pointsInSquare = model.pointsInSquare + pointsInSquare
+        , pointsInCircle = pointsInCircle
+        , pointsInSquare = pointsInSquare
         }
         , Cmd.none )
 
