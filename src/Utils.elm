@@ -138,4 +138,4 @@ triangleArea point1 point2 point3 =
     )
 
 calculatePi : Int -> Int -> Float
-calculatePi inCircle inSquare = (Basics.toFloat inCircle) / (Basics.toFloat inSquare)
+calculatePi inCircle inSquare = 4 * (Basics.toFloat inCircle) / (Basics.toFloat inSquare)

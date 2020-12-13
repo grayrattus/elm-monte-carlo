@@ -4,6 +4,7 @@ import Utils exposing (Rectangle, Circle, Point)
 import Debug exposing (log)
 
 import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
 import Browser
 import Html exposing (..)
 import Task
@@ -33,11 +34,12 @@ main =
 
 -- MODEL
 
-defaultRadius = 50
+defaultRadius = 300 * 2
 
 type alias Model =
-  { zone : Time.Zone
-  , time : Time.Posix
+  { 
+   time : Time.Posix
+  , disableDrawing: Bool
   , points: List(Point)
   , circle: Circle
   , rectangle: Rectangle
@@ -51,8 +53,8 @@ type alias Model =
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  ( Model Time.utc (Time.millisToPosix 0) [] (createCircle 150 50 defaultRadius) (createRectangle 50 50 defaultRadius defaultRadius) 0 0 0 0 0 
-  , Task.perform AdjustTimeZone Time.here
+  ( Model (Time.millisToPosix 0) False [] (createCircle (defaultRadius / 2) (defaultRadius / 2) (defaultRadius / 2)) (createRectangle (defaultRadius / 2) (defaultRadius / 2) defaultRadius defaultRadius) 0 0 0 0 0 
+  , Cmd.none
   )
 
 
@@ -60,20 +62,20 @@ init _ =
 
 type Msg
   = Tick Time.Posix
-  | AdjustTimeZone Time.Zone
   | NewRandomX Float
   | NewRandomY Float
+  | DisableDrawing
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     Tick newTime -> 
       (model
-      , Random.generate NewRandomX (Random.float 0 200))
+      , Random.generate NewRandomX (Random.float 0 defaultRadius))
 
     NewRandomX newX ->
       ({ model | x = newX }
-      , Random.generate NewRandomY (Random.float 0 100))
+      , Random.generate NewRandomY (Random.float 0 defaultRadius))
 
     NewRandomY newY ->
       let
@@ -95,30 +97,23 @@ update msg model =
         }
         , Cmd.none )
 
-    AdjustTimeZone newZone ->
-      ( { model | zone = newZone }
-      , Cmd.none
-      )
+    DisableDrawing -> 
+      ({model | disableDrawing = not model.disableDrawing}, Cmd.none)
 
 -- SUBSCRIPTIONS
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Time.every 1000 Tick
-
+  Time.every 0 Tick
 
 -- VIEW
-
 
 view : Model -> Html Msg
 view model =
   let
-    hour   = String.fromInt (Time.toHour   model.zone model.time)
-    minute = String.fromInt (Time.toMinute model.zone model.time)
-    second = String.fromInt (Time.toSecond model.zone model.time)
     htmlCircle = [circleToHtml(model.circle)]
     htmlRectangle = [rectangleToHtml(model.rectangle)]
-    shapes = htmlCircle ++ htmlRectangle ++ (pointsToHtml model.points)
+    shapes = htmlRectangle ++ htmlCircle ++ if model.disableDrawing then [] else (pointsToHtml model.points)
     pi = p [] [text ("PI: " ++ (String.fromFloat model.monteCarloPi))]
     pointsInCircle = p [] [text ("Inside circle: " ++ (String.fromInt model.pointsInCircle))]
     pointsInSqare = p [] [text ("Inside square: " ++ (String.fromInt model.pointsInSquare))]
@@ -126,12 +121,13 @@ view model =
   in
   div [] [
     div [
-      style "width" "200px"
-    ,style "height" "100px" 
+      style "width" ((String.fromInt defaultRadius) ++ "px")
+    ,style "height" ((String.fromInt defaultRadius) ++ "px")
     ,style "position" "relative"
     ,style "background-color" "gray"
     ] (shapes),
     pi,
+    button [ onClick DisableDrawing ] [ text "Toggle drawing" ],
     pointsInCircle,
     pointsInSqare,
     totalPoints
